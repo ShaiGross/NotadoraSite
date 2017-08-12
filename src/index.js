@@ -64,12 +64,8 @@ class VerbsExplorer extends React.Component {
             persons: [],
             conjugationRules: []
         }
-                     
-        console.log('about to call startup info');
+                             
         this.getStartupInfo();
-
-        this.getVerbs();
-
         this.handlePageClick = this.handlePageClick.bind(this);
     }
 
@@ -83,15 +79,23 @@ class VerbsExplorer extends React.Component {
                                   conjugationRulesPromise];
 
         Promise.all(allGrammPromises).
-        then(values => {
-            this.grammaticalData.tenses = tensesPromise.value;
-            this.grammaticalData.persons = personsPromise.value;
-            this.grammaticalData.conjugationRules = conjugationRulesPromise.value;
+        then(() => {
+            tensesPromise.then(v => {                
+                this.grammaticalData.tenses = v;                
+            });
+            personsPromise.then(v => {                
+                this.grammaticalData.persons = v;                
+            });
+            conjugationRulesPromise.then(v => {                
+                this.grammaticalData.conjugationRules = v;                
+            });
+
+            this.getVerbs();
         }).
         then(() => {
             this.setState({
                 loading: false
-            });
+            });            
         }).
         catch(msg => {
             this.setState({                
@@ -115,8 +119,8 @@ class VerbsExplorer extends React.Component {
                     map[val.id] = val;
                     return map;
                 }, {});
-
-                console.log(`${grammObj} are ${json}`)
+                console.log(`${grammObj}:`);
+                console.log(grammObjMap);
                 resolve(grammObjMap);
             })
             .catch(msg => {                
