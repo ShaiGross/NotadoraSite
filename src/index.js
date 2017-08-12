@@ -7,7 +7,17 @@ function Verb(props) {
     var verbClassName = 'verb' + (props.isSelected ? '_selected' : '');
     return (
         <div className={verbClassName} onClick={props.onClick}>
-            <h1>{props.verb.spanishInf + ' - ' + props.verb.englishInf}</h1>
+            <h1>{props.verb.spanishInfinative + ' - ' + props.verb.englishInfinative}</h1>
+        </div>
+    );
+}
+
+function VerbDetails(props) {
+    
+    return (
+        <div className='verb-details'>
+            <h1 className='verb-details-spanishInfinative'>{props.selectedVerb.spanishInfinative}</h1>
+            <h2 className='verb-details-englishInfinative'>{props.selectedVerb.englishInfinative}</h2>
         </div>
     );
 }
@@ -22,7 +32,7 @@ class VerbList extends React.Component {
             return (
                 <Verb key = {verb.id}
                     verb={verb}
-                    isSelected = {verb.id == this.props.selectedVerbId}
+                    isSelected = {verb.id === this.props.selectedVerbId}
                     onClick={() => this.props.onClick(verb)}>
                 </Verb>
             );
@@ -36,69 +46,99 @@ class VerbList extends React.Component {
     }
 }
 
-function VerbDetails(props) {
-    
-    // if (!props.selectedVerb) {
-    //     return null;
-    // }
-    
-    return (
-        <div className='verb-details'>
-            <h1 className='verb-details-spanishInf'>{props.selectedVerb.spanishInf}</h1>
-            <h2 className='verb-details-englishInf'>{props.selectedVerb.englishInf}</h2>
-        </div>
-    );
-}
 
 class VerbsExplorer extends React.Component {
+     
     constructor() {
-        super();
+        super();                
 
-        const mockVerbs = [{
-            id: 1,
-            spanishInf: 'Comer',
-            englishInf: 'To Eat'
-        },{
-            id: 2,
-            spanishInf: 'Vivir',
-            englishInf: 'To Live'
-        },{
-            id: 3,
-            spanishInf: 'Ir',
-            englishInf: 'To Go'
-        },{
-            id: 4,
-            spanishInf: 'Soñar',
-            englishInf: 'To Dream'
-        },{
-            id: 5,
-            spanishInf: 'Desarrollar',
-            englishInf: 'To Develop'
-        },{
-            id: 6,
-            spanishInf: 'Mezclar',
-            englishInf: 'To Mix'
-        },{
-            id: 7,
-            spanishInf: 'Mejorar',
-            englishInf: 'To Improve'
-        },{
-            id: 8,
-            spanishInf: 'Compartir',
-            englishInf: 'To Share'
-        },{
-            id: 9,
-            spanishInf: 'Hablar',
-            englishInf: 'To Speak'
-        }];
-
-        this.state = {
-            verbs: mockVerbs,
-            matchingVerbs: mockVerbs,
+        this.state = {        
+            matchingVerbs: [],
             selectedVerbId: null,
-        };
+            erros: null,
+            loading: true,
+        };   
+
+        this.grammaticalData = {
+            tenses: [],
+            persons: [],
+            conjugationRules: []
+        }
+                     
+        console.log('about to call startup info');
+        this.getStartupInfo();
+
+        this.getVerbs();
 
         this.handlePageClick = this.handlePageClick.bind(this);
+    }
+
+    getStartupInfo() {
+
+        const tensesPromise = this.fetchGrammObj('tenses');
+        const personsPromise = this.fetchGrammObj('persons');
+        const conjugationRulesPromise = this.fetchGrammObj('conjugationRules');
+        const allGrammPromises = [tensesPromise,
+                                  personsPromise,
+                                  conjugationRulesPromise];
+
+        Promise.all(allGrammPromises).
+        then(values => {
+            this.grammaticalData.tenses = tensesPromise.value;
+            this.grammaticalData.persons = personsPromise.value;
+            this.grammaticalData.conjugationRules = conjugationRulesPromise.value;
+        }).
+        then(() => {
+            this.setState({
+                loading: false
+            });
+        }).
+        catch(msg => {
+            this.setState({                
+                errors: msg
+            });
+        });                        
+    }
+
+    fetchGrammObj(grammObj) {
+                
+        return new Promise((resolve, reject) => {
+            fetch(`http://localhost:60665/${grammObj}`)
+            .then(res => {
+                if (res.ok)
+                    return res.json();
+                else
+                    throw Error(`Couldn't retieve ${grammObj}`);
+            })
+            .then(json => {
+                const grammObjMap = json.reduce((map, val) => {
+                    map[val.id] = val;
+                    return map;
+                }, {});
+
+                console.log(`${grammObj} are ${json}`)
+                resolve(grammObjMap);
+            })
+            .catch(msg => {                
+                this.setState({
+                    errors: msg
+                });
+                reject(msg);
+            });
+        });
+    }
+
+    getVerbs() {                
+
+        fetch('http://localhost:60665/verbs').then(response => {            
+            return response.json();
+        }).then(jsonVerbs => {                          
+            
+            this.setState({                
+                verbs: jsonVerbs,
+                matchingVerbs: jsonVerbs
+            });
+        });        
     }
 
     handleAppOnClick(e) {
@@ -116,9 +156,9 @@ class VerbsExplorer extends React.Component {
 
         const text = e.target.value.toLowerCase();
         const verbs = this.state.verbs.slice();
-        const matchingVerbs = verbs.filter(v => v.spanishInf.toLowerCase().startsWith(text) || 
-                                                v.englishInf.toLowerCase().startsWith(text) || 
-                                                v.englishInf.toLowerCase().startsWith('to ' + text));
+        const matchingVerbs = verbs.filter(v => v.spanishInfinative.toLowerCase().startsWith(text) || 
+                                                v.englishInfinative.toLowerCase().startsWith(text) || 
+                                                v.englishInfinative.toLowerCase().startsWith('to ' + text));
 
         this.setState({
             matchingVerbs: matchingVerbs,
@@ -136,23 +176,29 @@ class VerbsExplorer extends React.Component {
         
         const selectedVerbId = this.state.selectedVerbId;
         const verbs = this.state.verbs;
-        let selectedVerb = (selectedVerbId) ? verbs.filter(v => v.id == selectedVerbId)[0] : null;
+        let selectedVerb = (selectedVerbId) ? verbs.filter(v => v.id === selectedVerbId)[0] : null;
 
         return (
             <div className='AppContainer' onClick={this.handlePageClick}>
-            <div className='verbs-explorer'
-                 tabIndex='0'
-                 onClick={this.handleAppOnClick}>
-                <div className='verbs-menu'>
-                    <input className='verbs-search-text'
-                           type="text"
-                           onChange={(e) => this.handleSearchSuffixChanged(e)}/>
-                    <VerbList verbs={this.state.matchingVerbs}
-                              selectedVerbId={this.state.selectedVerbId}
-                              onClick={(verb) => this.handleVerbClick(verb)}></VerbList>
+            {!!this.state.errors && 
+                <div class='error-div'>{this.state.errors}</div>}
+            {!this.state.errors && this.state.loading && 
+                <div className='loading-data-div'>currently loading data</div>}
+            {!this.state.errors && !this.state.loading &&
+                <div className='verbs-explorer'
+                    tabIndex='0'
+                    onClick={this.handleAppOnClick}>
+                    <div className='verbs-menu'>
+                        <input className='verbs-search-text'
+                            type="text"
+                            onChange={(e) => this.handleSearchSuffixChanged(e)}/>
+                        <VerbList verbs={this.state.matchingVerbs}
+                                selectedVerbId={this.state.selectedVerbId}
+                                onClick={(verb) => this.handleVerbClick(verb)}></VerbList>
+                    </div>
+                    {selectedVerb && <VerbDetails selectedVerb={selectedVerb}></VerbDetails>}
                 </div>
-                {selectedVerb && <VerbDetails selectedVerb={selectedVerb}></VerbDetails>}
-            </div>
+            }            
             </div>
         );        
     }
