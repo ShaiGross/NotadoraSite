@@ -55,8 +55,9 @@ class VerbsExplorer extends React.Component {
         this.state = {        
             matchingVerbs: [],
             selectedVerbId: null,
-            erros: null,
+            errors: null,
             loading: true,
+            searchSuffix: ''
         };   
 
         this.grammaticalData = {
@@ -89,16 +90,12 @@ class VerbsExplorer extends React.Component {
             });
             conjugationRulesPromise.then(v => {                
                 this.grammaticalData.conjugationRules = v;                
-            });
+            });            
 
             this.getVerbs();
-        })
-        .then(() => {
-            this.setState({
-                loading: false
-            });            
-        })
+        })        
         .catch(msg => {
+            console.log(typeof(msg));
             this.setState({                
                 errors: msg
             });
@@ -115,8 +112,9 @@ class VerbsExplorer extends React.Component {
                 else
                     throw Error(`Couldn't retieve ${grammObj}`);
             })
-            .then(json => {
-                const grammObjMap = json.reduce((map, val) => {
+            .then(json => {         
+                
+                const grammObjMap = json.reduce((map, val, i) => {                    
                     map[val.id] = val;
                     return map;
                 }, {});
@@ -124,7 +122,7 @@ class VerbsExplorer extends React.Component {
                 console.log(grammObjMap);
                 resolve(grammObjMap);
             })
-            .catch(msg => {                
+            .catch(msg => {              
                 this.setState({
                     errors: msg
                 });
@@ -134,6 +132,13 @@ class VerbsExplorer extends React.Component {
     }
 
     getVerbs() {                
+
+        this.fetchGrammObj('verbs').then(v => {
+            this.grammaticalData.verbs = v;
+            this.setState({                
+                loading: false
+            })
+        })
 
         fetch('http://localhost:60665/verbs').then(response => {            
             return response.json();
@@ -159,15 +164,8 @@ class VerbsExplorer extends React.Component {
 
     handleSearchSuffixChanged(e) {
 
-        const text = e.target.value.toLowerCase();
-        const verbs = this.state.verbs.slice();
-        const matchingVerbs = verbs.filter(v => v.spanishInfinative.toLowerCase().startsWith(text) || 
-                                                v.englishInfinative.toLowerCase().startsWith(text) || 
-                                                v.englishInfinative.toLowerCase().startsWith('to ' + text));
-
-        this.setState({
-            matchingVerbs: matchingVerbs,
-        });        
+        const text = e.target.value.toLowerCase();        
+        this.setState({searchSuffix: text});
     }
 
     handleVerbClick(verb) {
@@ -177,12 +175,22 @@ class VerbsExplorer extends React.Component {
         });    
     }   
 
-    render() { 
+    getMatchingVerbs() {
         
-        const selectedVerbId = this.state.selectedVerbId;
-        const verbs = this.state.verbs;
-        let selectedVerb = (selectedVerbId) ? verbs.filter(v => v.id === selectedVerbId)[0] : null;
+        const suffix = this.state.searchSuffix;
+        const allVerbsMap = this.grammaticalData.verbs;        
+        const allVerbs = Object.values(allVerbsMap);
+        console.log(suffix);
 
+        if (!suffix)
+            return allVerbs;
+
+        return  allVerbs.filter(v => v.spanishInfinative.toLowerCase().startsWith(suffix) || 
+                                     v.englishInfinative.toLowerCase().startsWith(suffix) || 
+                                     v.englishInfinative.toLowerCase().startsWith('to ' + suffix));        
+    }
+
+    render() {                 
         if (this.state.errors) {
             return (
                 <div className='status-div'>{this.state.errors}</div>
@@ -196,6 +204,11 @@ class VerbsExplorer extends React.Component {
             );
         }
         else {
+            const selectedVerbId = this.state.selectedVerbId;
+            const verbs = Object.values(this.grammaticalData.verbs);
+            const selectedVerb = (selectedVerbId) ? verbs.filter(v => v.id === selectedVerbId)[0] : null;            
+            const matchingVerbs = this.getMatchingVerbs();
+
             return (
                 <div className='AppContainer' onClick={this.handlePageClick}>                
                     <div className='verbs-explorer'
@@ -205,9 +218,9 @@ class VerbsExplorer extends React.Component {
                             <input className='verbs-search-text'
                                 type="text"
                                 onChange={(e) => this.handleSearchSuffixChanged(e)}/>
-                            <VerbList verbs={this.state.matchingVerbs}
-                                    selectedVerbId={this.state.selectedVerbId}
-                                    onClick={(verb) => this.handleVerbClick(verb)}></VerbList>
+                            <VerbList verbs={matchingVerbs}
+                                      selectedVerbId={this.state.selectedVerbId}
+                                      onClick={(verb) => this.handleVerbClick(verb)}></VerbList>
                         </div>
                         {selectedVerb && <VerbDetails selectedVerb={selectedVerb}></VerbDetails>}
                     </div>                            
