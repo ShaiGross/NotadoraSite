@@ -63,10 +63,11 @@ class VerbsExplorer extends React.Component {
             tenses: [],
             persons: [],
             conjugationRules: []
-        }
-                             
-        this.getStartupInfo();
+        };
+        
         this.handlePageClick = this.handlePageClick.bind(this);
+        this.statusMsg = '';
+        this.getStartupInfo();        
     }
 
     getStartupInfo() {
@@ -78,8 +79,8 @@ class VerbsExplorer extends React.Component {
                                   personsPromise,
                                   conjugationRulesPromise];
 
-        Promise.all(allGrammPromises).
-        then(() => {
+        Promise.all(allGrammPromises)
+        .then(() => {
             tensesPromise.then(v => {                
                 this.grammaticalData.tenses = v;                
             });
@@ -91,13 +92,13 @@ class VerbsExplorer extends React.Component {
             });
 
             this.getVerbs();
-        }).
-        then(() => {
+        })
+        .then(() => {
             this.setState({
                 loading: false
             });            
-        }).
-        catch(msg => {
+        })
+        .catch(msg => {
             this.setState({                
                 errors: msg
             });
@@ -174,7 +175,7 @@ class VerbsExplorer extends React.Component {
         this.setState({
             selectedVerbId: verb.id
         });    
-    }
+    }   
 
     render() { 
         
@@ -182,29 +183,37 @@ class VerbsExplorer extends React.Component {
         const verbs = this.state.verbs;
         let selectedVerb = (selectedVerbId) ? verbs.filter(v => v.id === selectedVerbId)[0] : null;
 
-        return (
-            <div className='AppContainer' onClick={this.handlePageClick}>
-            {!!this.state.errors && 
-                <div class='error-div'>{this.state.errors}</div>}
-            {!this.state.errors && this.state.loading && 
-                <div className='loading-data-div'>currently loading data</div>}
-            {!this.state.errors && !this.state.loading &&
-                <div className='verbs-explorer'
-                    tabIndex='0'
-                    onClick={this.handleAppOnClick}>
-                    <div className='verbs-menu'>
-                        <input className='verbs-search-text'
-                            type="text"
-                            onChange={(e) => this.handleSearchSuffixChanged(e)}/>
-                        <VerbList verbs={this.state.matchingVerbs}
-                                selectedVerbId={this.state.selectedVerbId}
-                                onClick={(verb) => this.handleVerbClick(verb)}></VerbList>
-                    </div>
-                    {selectedVerb && <VerbDetails selectedVerb={selectedVerb}></VerbDetails>}
+        if (this.state.errors) {
+            return (
+                <div className='status-div'>{this.state.errors}</div>
+            );
+        }
+        else if (this.state.loading) {
+
+                        
+            return (
+                <div className='loading-div'>fetching data</div>
+            );
+        }
+        else {
+            return (
+                <div className='AppContainer' onClick={this.handlePageClick}>                
+                    <div className='verbs-explorer'
+                        tabIndex='0'
+                        onClick={this.handleAppOnClick}>
+                        <div className='verbs-menu'>
+                            <input className='verbs-search-text'
+                                type="text"
+                                onChange={(e) => this.handleSearchSuffixChanged(e)}/>
+                            <VerbList verbs={this.state.matchingVerbs}
+                                    selectedVerbId={this.state.selectedVerbId}
+                                    onClick={(verb) => this.handleVerbClick(verb)}></VerbList>
+                        </div>
+                        {selectedVerb && <VerbDetails selectedVerb={selectedVerb}></VerbDetails>}
+                    </div>                            
                 </div>
-            }            
-            </div>
-        );        
+            );        
+        }
     }
 }
 
