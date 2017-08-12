@@ -35,7 +35,7 @@
 
 .verb-details {
     display: inline;
-    min-height: 430px;
+    max-height: 430px;
     background-color: beige;
     position: absolute;
     overflow-y: auto;    

@@ -12,14 +12,48 @@ function Verb(props) {
     );
 }
 
-function VerbDetails(props) {
-    
-    return (
-        <div className='verb-details'>
-            <h1 className='verb-details-spanishInfinative'>{props.selectedVerb.spanishInfinative}</h1>
-            <h2 className='verb-details-englishInfinative'>{props.selectedVerb.englishInfinative}</h2>
-        </div>
-    );
+class VerbDetails extends React.Component {
+    constructor(props) {
+        super(props);
+        
+        this.fetchGrammObj = (grammObjName, id) => this.props.fetchObjFu(grammObjName, id);                
+        this.updateGrammObj = this.props.updateObjFu; // Ask frontend about this
+        this.updateGrammObj.bind(this.props.parentContext);
+
+        this.state = {
+            verb: this.props.verb
+        };
+
+        if (!this.props.verb.conjugations)
+            this.getConjugations();
+    }
+
+    getConjugations() {
+        
+        if (!this.state.verb.conjugations) {
+            const verb = this.state.verb;   
+            this.fetchGrammObj('verbs', verb.id)            
+            .then(v => {                                
+                this.setState({
+                    verb: v
+                });                
+            })  
+        }
+    }
+
+    render() {        
+        const conjugations = this.state.verb.conjugations;
+        const verb = this.state.verb;
+        return (
+            
+            <div className='verb-details'>
+                <h1 className='verb-details-spanishInfinative'>{verb.spanishInfinative}</h1>
+                <h2 className='verb-details-englishInfinative'>{verb.englishInfinative}</h2>
+                {!conjugations && <div className='verb-details-loading'>Loading conjugations</div>}
+                {conjugations && <div className='verb-details-conjugations'>{JSON.stringify(conjugations)}</div>}
+            </div>
+        );
+    }
 }
 
 class VerbList extends React.Component {
@@ -31,9 +65,8 @@ class VerbList extends React.Component {
         const verbComponents = verbs.map((verb) => {
             return (
                 <Verb key = {verb.id}
-                    verb={verb}
-                    isSelected = {verb.id === this.props.selectedVerbId}
-                    onClick={() => this.props.onClick(verb)}>
+                      verb={verb}
+                      isSelected = {this.props.selectedVerb && verb.id === this.props.selectedVerb.Id}                      onClick={() => this.props.onClick(verb)}>
                 </Verb>
             );
         })
@@ -46,15 +79,15 @@ class VerbList extends React.Component {
     }
 }
 
-
 class VerbsExplorer extends React.Component {
      
+    // constructor
     constructor() {
         super();                
 
         this.state = {        
             matchingVerbs: [],
-            selectedVerbId: null,
+            selectedVerb: null,
             errors: null,
             loading: true,
             searchSuffix: ''
@@ -71,6 +104,7 @@ class VerbsExplorer extends React.Component {
         this.getStartupInfo();        
     }
 
+    // methods
     getStartupInfo() {
 
         const tensesPromise = this.fetchGrammObj('tenses');
@@ -102,23 +136,23 @@ class VerbsExplorer extends React.Component {
         });                        
     }
 
-    fetchGrammObj(grammObj) {
+    fetchGrammObj(grammObjName) {
                 
         return new Promise((resolve, reject) => {
-            fetch(`http://localhost:60665/${grammObj}`)
+            fetch(`http://localhost:60665/${grammObjName}`)
             .then(res => {
                 if (res.ok)
                     return res.json();
                 else
-                    throw Error(`Couldn't retieve ${grammObj}`);
+                    throw Error(`Couldn't retieve ${grammObjName}`);
             })
-            .then(json => {         
+            .then(obj => {         
                 
-                const grammObjMap = json.reduce((map, val, i) => {                    
+                const grammObjMap = obj.reduce((map, val, i) => {                    
                     map[val.id] = val;
                     return map;
                 }, {});
-                console.log(`${grammObj}:`);
+                console.log(`${grammObjName}:`);
                 console.log(grammObjMap);
                 resolve(grammObjMap);
             })
@@ -138,42 +172,8 @@ class VerbsExplorer extends React.Component {
             this.setState({                
                 loading: false
             })
-        })
-
-        fetch('http://localhost:60665/verbs').then(response => {            
-            return response.json();
-        }).then(jsonVerbs => {                          
-            
-            this.setState({                
-                verbs: jsonVerbs,
-                matchingVerbs: jsonVerbs
-            });
-        });        
+        })                
     }
-
-    handleAppOnClick(e) {
-        e.stopPropagation();
-    }
-
-    handlePageClick(e) {
-
-        this.setState({
-            selectedVerbId: null,
-        });
-    }
-
-    handleSearchSuffixChanged(e) {
-
-        const text = e.target.value.toLowerCase();        
-        this.setState({searchSuffix: text});
-    }
-
-    handleVerbClick(verb) {
-        
-        this.setState({
-            selectedVerbId: verb.id
-        });    
-    }   
 
     getMatchingVerbs() {
         
@@ -189,6 +189,73 @@ class VerbsExplorer extends React.Component {
                                      v.englishInfinative.toLowerCase().startsWith(suffix) || 
                                      v.englishInfinative.toLowerCase().startsWith('to ' + suffix));        
     }
+    
+    setSelectedVerb(verbId) {
+        
+        const verbsMap = this.grammaticalData.verbs;
+
+        if (!verbId || !verbsMap[verbId])
+            return null;
+
+        const selectedVerb = verbsMap[verbId];
+
+        this.setState({
+            selectedVerb: selectedVerb
+        });        
+    }
+
+    fetchGrammObjById(grammObjName, id) {
+        
+        return new Promise((resolve, reject) => {
+            fetch(`http://localhost:60665/${grammObjName}/${id}`)
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                }
+                else
+                    throw Error(`couldn't fetch obj ${id} from ${grammObjName}`);
+            })
+            .then(obj => {
+                console.log(`fetched obj ${id} from ${grammObjName}`);
+                console.log(obj);
+                resolve(obj);
+            })
+            .catch(msg => {
+               this.setState({
+                    errors: msg
+                });
+                reject(msg);
+            })
+        })
+    }
+
+    updateGrammObj(grammObjName, obj) {
+        alert(JSON.stringify(this.grammaticalData));
+        const objMap = this.grammaticalData[grammObjName];
+        objMap[obj.id] = obj;
+    }
+    // events 
+    handleAppOnClick(e) {
+        e.stopPropagation();
+    }
+
+    handlePageClick(e) {
+
+        this.setState({
+            selectedVerb: null,
+        });
+    }
+
+    handleSearchSuffixChanged(e) {
+
+        const text = e.target.value.toLowerCase();        
+        this.setState({searchSuffix: text});
+    }
+
+    handleVerbClick(verb) {
+                
+        this.setSelectedVerb(verb.id);
+    }    
 
     render() {                 
         if (this.state.errors) {
@@ -203,10 +270,7 @@ class VerbsExplorer extends React.Component {
                 <div className='loading-div'>fetching data</div>
             );
         }
-        else {
-            const selectedVerbId = this.state.selectedVerbId;
-            const verbs = Object.values(this.grammaticalData.verbs);
-            const selectedVerb = (selectedVerbId) ? verbs.filter(v => v.id === selectedVerbId)[0] : null;            
+        else {                        
             const matchingVerbs = this.getMatchingVerbs();
 
             return (
@@ -219,10 +283,14 @@ class VerbsExplorer extends React.Component {
                                 type="text"
                                 onChange={(e) => this.handleSearchSuffixChanged(e)}/>
                             <VerbList verbs={matchingVerbs}
-                                      selectedVerbId={this.state.selectedVerbId}
+                                      selectedVerb={this.state.selectedVerb}
                                       onClick={(verb) => this.handleVerbClick(verb)}></VerbList>
                         </div>
-                        {selectedVerb && <VerbDetails selectedVerb={selectedVerb}></VerbDetails>}
+                        {this.state.selectedVerb && 
+                         <VerbDetails verb={this.state.selectedVerb}
+                                      fetchObjFu={this.fetchGrammObjById}
+                                      updateObjFu={this.updateGrammObj}
+                                      parentContext={this.context}></VerbDetails>}
                     </div>                            
                 </div>
             );        
