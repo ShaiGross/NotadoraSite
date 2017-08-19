@@ -1,385 +1,281 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css'
+import './styles/index.css';
+import {fetcher} from './tools/fetcher.js';
+import {VerbDetails} from './components/VerbDetails.js'
+import {ConjugationRuleDetails} from './components/ConjugationRuleDetails.js'
 
-function Verb(props) {
+function ItemDetailsView(props) {
+    const item = props.item;
+    const itemType = item.type;
 
-    var verbClassName = 'verb' + (props.isSelected ? '_selected' : '');
+switch (itemType) {
+    case 'verb':
+        return (<VerbDetails verb={item}
+                             grammaticalData={props.grammaticalData}
+                             onSelectItem={(item) => props.onSelectItem(item)}></VerbDetails>);
+    case 'conjugationRule':
+        return (<ConjugationRuleDetails conjugationRule={item}
+                             grammaticalData={props.grammaticalData}
+                             onSelectItem={(item) => props.onSetItem(item)}
+                             onUpdateItem={(item) => props.onUpdateItem(item)}></ConjugationRuleDetails>);
+    default:
+        break;
+}
+}
+
+function ItemListView(props) {
+    const item = props.item;
+    const itemType = item.type;
+    const classSuffix = '-list-view'
+    const selectedSuffix = '-selected';
+    const elementClass = !props.isSelected ? `${itemType}${classSuffix}`  : `${itemType}${classSuffix}${selectedSuffix}`
+
+    switch (itemType) {
+    case 'tense':
+        return <div className={elementClass}
+                    onClick={e => props.onClick(item)}>{item.name}</div>            
+    case 'person':
+        return <div className={elementClass}
+                    onClick={e => props.onClick(item)}>{`${item.spanishExpression} - ${item.description}`}</div>            
+    case 'conjugationRule':
+        return <div className={elementClass}
+                    onClick={e => props.onClick(item)}>{`${item.name}`}</div>        
+    case 'verb':
+        return <div className={elementClass}
+                    onClick={e => props.onClick(item)}>{`${item.englishInfinative} - ${item.spanishInfinative}`}</div>
+    }
+}
+
+function ItemsList(props) {
+
+    const items = props.items;    
+    
     return (
-        <div className={verbClassName} onClick={props.onClick}>
-            <h1>{props.verb.spanishInfinative + ' - ' + props.verb.englishInfinative}</h1>
+        <div className='items-list'>
+            {items.map(item => {
+                return <ItemListView key={item.id} 
+                                     item={item}
+                                     isSelected={item === props.selectedItem}                                     
+                                     onClick={(item) => {props.onClick(item)}}></ItemListView>
+            })}
         </div>
     );
 }
 
-function VerbDetails(props) {
-            
-    const verb = props.verb;            
-    const conjugations = verb.conjugations;    
-    let colHeaders = [];
-    let rowHeaders = [];
-    let rows = [];        
-    const grammaticalData = props.grammaticalData;
-    const conjugationRulesIds = verb.conjugationRulesIds;
-    
-    const irregularConjugationRules = [];    
-    
-    if (conjugationRulesIds) {
-        conjugationRulesIds.map(ruleId => {
-            const rule = grammaticalData.conjugationRules[ruleId];
-
-            if (!rule.isRegular) {
-                irregularConjugationRules.push(rule);
-            }
-        });
-    }
-
-    if (conjugations) {
-                                        
-        let row = [];        
-        let keyCounter = 0;
-        
-        conjugations.map(v => {            
-                                    
-            const tense = grammaticalData.tenses[v.tenseId];
-            const person = grammaticalData.persons[v.personId];
-            const tenseName = tense.name;            
-            v['reactKey'] = keyCounter;
-
-            if (!tenseName.includes("Participle")) {
-                        
-                if (colHeaders.indexOf(person.spanishExpression) < 0) {
-                    colHeaders.push(person.spanishExpression);
-                }            
-
-                if (rowHeaders.indexOf(tenseName) < 0) {
-                    
-                    if (row.length > 0) {
-                        rows.push(row);                    
-                        row = [];
-                    }
-
-                    rowHeaders.push(tenseName);                
-                }
-
-                row.push(v);
-            }
-            
-            keyCounter++;
-        });        
-
-        rows.push(row);
-    }
-    
-    return (
-        
-        <div className='verb-details'>
-            <h1 className='verb-details-spanishInfinative'>{verb.spanishInfinative}</h1>
-            <h2 className='verb-details-englishInfinative'>{verb.englishInfinative}</h2>
-            {!conjugations && 
-                <div className='verb-details-loading'>Loading conjugations</div>}
-            {conjugations && 
-                <div className='verb-details-conjugations'>
-                    <table className='conjugationsTable'>
-                        <thead>
-                            <tr>
-                                <td style={{borderStyle: 'none'}}></td>
-                                {colHeaders.map((spanishExp, i) => {
-                                    return <th key={i}>{spanishExp}</th>
-                                })}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.map((row, i) => {
-                            return (<tr key={i}>
-                                <th key={i}>{rowHeaders[i]}</th>
-                                {row.map(conjugationObj => {
-                                    return <td key={conjugationObj.reactKey}>{conjugationObj.conjugation}</td>
-                                })}                              
-                            </tr>)
-                            })}
-                        </tbody>
-                    </table>        
-                </div>}
-            {conjugationRulesIds && 
-                <div className='conjugationRules'>
-                {irregularConjugationRules.length > 0 &&                                        
-                    <ul>
-                        <h3>Irregular Rules</h3>
-                        {irregularConjugationRules.map(r => {
-                           return <li key={r.id}>{r.name}</li>
-                        })}
-                    </ul>                    
-                }
-                {irregularConjugationRules.length === 0 &&                     
-                    <p>verb Is regular</p>
-                }
-                </div>}
-        </div>
-    );    
-}
-
-class VerbList extends React.Component {
-        
-    render() {
-        
-        const verbs = this.props.verbs.slice();
-
-        const verbComponents = verbs.map((verb) => {
-            return (
-                <Verb key = {verb.id}
-                      verb={verb}
-                      isSelected = {this.props.selectedVerb && verb.id === this.props.selectedVerb.Id}                      onClick={() => this.props.onClick(verb)}>
-                </Verb>
-            );
-        })
-
-        return (
-            <div className='verbs-list'>
-                {verbComponents}
-            </div>
-        );
-    }
-}
-
-class VerbsExplorer extends React.Component {
+class Explorer extends React.Component {
      
     // constructor
     constructor() {
         super();                
 
-        this.state = {        
-            matchingVerbs: [],
-            selectedVerb: null,
-            errors: null,
-            loading: true,
-            searchSuffix: ''
+        this.state = {                        
+            errors: null
+            ,loading: true
+            ,itemsMap: null
+            ,itemPrefix: ''
+            ,selectedItem: null
         };   
 
         this.grammaticalData = {
-            tenses: [],
-            persons: [],
-            conjugationRules: []
+            tenses: []
+            ,persons: []
+            ,conjugationRules: []
+            ,verbs: []
         };
-        
-        this.handlePageClick = this.handlePageClick.bind(this);
-        this.statusMsg = '';
-        this.getStartupInfo();    
+
+        this.loadStartupInfo();        
     }
 
     // methods
-    getStartupInfo() {
+    loadStartupInfo() {
         
-        const tensesPromise = this.fetchGrammObj('tenses');
-        const personsPromise = this.fetchGrammObj('persons');
-        const conjugationRulesPromise = this.fetchGrammObj('conjugationRules');
-        const allGrammPromises = [tensesPromise,
-                                  personsPromise,
-                                  conjugationRulesPromise];
+        const tensesPromise = fetcher.fetchGrammObjList('tenses');
+        const personsPromise = fetcher.fetchGrammObjList('persons');
+        const conjugationRulesPromise = fetcher.fetchGrammObjList('conjugationRules');
+        const verbsPromise = fetcher.fetchGrammObjList('verbs');
 
+        const allGrammPromises = [tensesPromise ,personsPromise ,conjugationRulesPromise, verbsPromise];                                 
+        
         Promise.all(allGrammPromises)
         .then(() => {
-            tensesPromise.then(v => {                
-                this.grammaticalData.tenses = v;                
+            
+            tensesPromise.then(tenses => {
+                this.grammaticalData.tenses = tenses;
             });
-            personsPromise.then(v => {                
-                this.grammaticalData.persons = v; 
-                console.log(this.grammaticalData.persons[8]);
+            personsPromise.then(persons => {                
+                this.grammaticalData.persons = persons;
             });
-            conjugationRulesPromise.then(v => {                
-                this.grammaticalData.conjugationRules = v;                
-            });            
+            conjugationRulesPromise.then(conjugationRules => {                
+                this.grammaticalData.conjugationRules = conjugationRules;
+            });
+            verbsPromise.then(verbs => {                
+                this.grammaticalData.verbs = verbs;
+                this.setState({
+                    itemsMap: this.grammaticalData.verbs
+                });                
+            });                    
 
-            this.getVerbs();
+            this.setState({
+                loading: false                
+            });
         })        
-        .catch(msg => {
-            console.log(typeof(msg));
-            this.setState({                
-                errors: msg
-            });
-        });                        
-    }
-
-    fetchGrammObj(grammObjName) {
-                
-        return new Promise((resolve, reject) => {
-            fetch(`http://localhost:60665/${grammObjName}`)
-            .then(res => {
-                if (res.ok)
-                    return res.json();
-                else
-                    throw Error(`Couldn't retieve ${grammObjName}`);
-            })
-            .then(obj => {         
-                
-                const grammObjMap = obj.reduce((map, val, i) => {                    
-                    map[val.id] = val;
-                    return map;
-                }, {});
-                console.log(`${grammObjName}:`);
-                console.log(grammObjMap);
-                resolve(grammObjMap);
-            })
-            .catch(msg => {              
-                this.setState({
-                    errors: msg
-                });
-                reject(msg);
-            });
-        });
-    }
-
-    getVerbs() {                
-
-        this.fetchGrammObj('verbs').then(v => {
-            this.grammaticalData.verbs = v;
-            this.setState({                
+        .catch(msg => {            
+            this.setState({
                 loading: false
-            })
-        })                
-    }
-
-    getMatchingVerbs() {
-        
-        const suffix = this.state.searchSuffix;
-        const allVerbsMap = this.grammaticalData.verbs;        
-        const allVerbs = Object.values(allVerbsMap);        
-
-        if (!suffix)
-            return allVerbs;
-
-        return  allVerbs.filter(v => v.spanishInfinative.toLowerCase().startsWith(suffix) || 
-                                     v.englishInfinative.toLowerCase().startsWith(suffix) || 
-                                     v.englishInfinative.toLowerCase().startsWith('to ' + suffix));        
-    }
-    
-    setSelectedVerb(verbId) {
-                
-        const verbsMap = this.grammaticalData.verbs;
-
-        if (!verbId || !verbsMap[verbId])
-            return null;
-
-        const selectedVerb = verbsMap[verbId];
-        console.log(`selected verb is: ${JSON.stringify(selectedVerb)}`)        
-
-        this.setState({
-            selectedVerb: selectedVerb
-        });
-        
-        if (!selectedVerb.conjugations) {
-            this.fetchGrammObjById('verbs', selectedVerb.id)
-            .then(v => {
-                this.setState({
-                    selectedVerb: v
-                });
+                ,errors: msg
             });
-        }
-        
-    }
-
-    fetchGrammObjById(grammObjName, id) {
-        
-        return new Promise((resolve, reject) => {
-            fetch(`http://localhost:60665/${grammObjName}/${id}`)
-            .then(res => {
-                if (res.ok) {
-                    return res.json();
-                }
-                else {
-                    throw Error(`couldn't fetch obj ${id} from ${grammObjName}`);
-                }
-            })
-            .then(obj => {
-                console.log(`fetched obj ${id} from ${grammObjName}`);
-                console.log(obj);
-                resolve(obj);
-            })
-            .catch(msg => {
-               this.setState({
-                    errors: msg
-                });
-                reject(msg);
-            })
-        })
-    }
-
-    updateGrammObj(grammObjName, obj) {
-        
-        const objMap = this.grammaticalData[grammObjName];
-        objMap[obj.id] = obj;
-    }
-
-    // events 
-    handleAppOnClick(e) {
-        e.stopPropagation();
-    }
-
-    handlePageClick(e) {
-
-        this.setState({
-            selectedVerb: null,
         });
     }
 
-    handleSearchSuffixChanged(e) {
+    isItemMatchingPrefix(item) {
+        
+        const itemType = item.type;
+        const prefix = this.state.itemPrefix.toLowerCase();
 
-        const text = e.target.value.toLowerCase();        
-        this.setState({searchSuffix: text});
+        if (!prefix) {
+            return true;
+        }
+
+        switch (itemType) {
+        case 'tense':
+            
+            const tenseName = item.name.toLowerCase();
+            return tenseName.startsWith(prefix);
+
+        case 'person':
+            
+            const spanishExpression = (!!item.spanishExpression) ? item.spanishExpression.toLowerCase() : '';
+            const desc = item.description.toLowerCase();
+            return spanishExpression.startsWith(prefix) || 
+                   desc.includes(`${prefix}`);
+
+        case 'conjugationRule':
+            
+            const seperationIndex = item.name.indexOf(':');
+            const conjRuleName = item.name.substring(0, seperationIndex)
+                                          .toLowerCase();
+            const ruleTenseName = item.name.substring(seperationIndex + 1).toLowerCase();
+
+            return conjRuleName.startsWith(prefix) || 
+                   ruleTenseName.startsWith(prefix);
+
+        case 'verb':
+            const spanishInf = item.spanishInfinative.toLowerCase();
+            const englishInf = item.englishInfinative.toLowerCase();
+            return spanishInf.startsWith(prefix) || 
+                   englishInf.startsWith(prefix) ||
+                   englishInf.startsWith(`to ${prefix}`);
+
+        }
     }
 
-    handleVerbClick(verb) {
-                
-        this.setSelectedVerb(verb.id);
-    }    
+    getItemTypeTogglers() {
+        return (<span className='item-types-buttons-container'>
+                        <h3  className='item-toggler-verb'
+                            onClick={e => 
+                            {                                
+                                this.setState({
+                                    itemsMap: this.grammaticalData.verbs
+                            })}
+                        }>verbs</h3>
+                        <h3 className='item-toggler-tense'
+                            onClick={e => 
+                            {                                
+                                this.setState({
+                                    itemsMap: this.grammaticalData.tenses
+                            })}
+                        }>tenses</h3>
+                        <h3 className='item-toggler-person'
+                            onClick={e => 
+                            {                                
+                                this.setState({
+                                    itemsMap: this.grammaticalData.persons
+                            })}
+                        }>persons</h3>
+                        <h3 className='item-toggler-conjugationRule'
+                            onClick={e => 
+                            {                                
+                                this.setState({
+                                    itemsMap: this.grammaticalData.conjugationRules
+                            })}
+                        }>conjugationRules</h3>
+                    </span>);
+    }
+
+    getCurrentListItemType() {
+        
+        const itemsMap = this.state.itemsMap;
+
+        if (!itemsMap)
+            return ''
+
+        const items = Object.values(itemsMap);
+        return items[0].type;
+    }
+
+    selectItem(item) {
+           
+        const itemMapName = item.type + 's';
+        const itemsMap = this.grammaticalData[itemMapName];
+
+        this.setState({
+            selectedItem: item
+            ,itemsMap: itemsMap
+            ,itemPrefix: ''
+        });
+    }
+
+    updateItem(item) {
+        const itemMapName = item.type + 's';
+        const itemId = item.id;
+        this.grammaticalData[itemMapName][itemId] = item;
+
+        fetcher.updateGrammObj(item);
+    }
 
     render() {   
         
-        if (this.state.errors) {
-            return (
-                <div className='status-div'>{this.state.errors}</div>
-            );
-        }
-        else if (this.state.loading) {
-
-                        
-            return (
-                <div className='loading-div'>fetching data</div>
-            );
-        }
-        else {                        
-            const matchingVerbs = this.getMatchingVerbs();
-
-            return (
-                <div className='AppContainer' onClick={this.handlePageClick}>                
-                    <div className='verbs-explorer'
-                        tabIndex='0'
-                        onClick={this.handleAppOnClick}>
-                        <div className='verbs-menu'>
-                            <input className='verbs-search-text'
-                                type="text"
-                                onChange={(e) => this.handleSearchSuffixChanged(e)}/>
-                            <VerbList verbs={matchingVerbs}
-                                      selectedVerb={this.state.selectedVerb}
-                                      onClick={(verb) => this.handleVerbClick(verb)}></VerbList>
-                        </div>
-                        {this.state.selectedVerb && 
-                         <VerbDetails verb={this.state.selectedVerb}
-                                      fetchObjFu={this.fetchGrammObjById}
-                                      updateObjFu={this.updateGrammObj}
-                                      grammaticalData={this.grammaticalData}></VerbDetails>}
-                    </div>                            
-                </div>
-            );        
-        }
+        const items = (!!this.state.itemsMap) ? Object.values(this.state.itemsMap)  : null;
+        const matchingItems = (!!items) ? items.filter(i => this.isItemMatchingPrefix(i)) : null;        
+        
+        return (
+                <div className='windowContainer'>                                        
+                    {!!this.state.errors && 
+                        <div className='errors'>{`error: ${this.state.errors.message}`}</div>
+                    }
+                    {!this.state.errors && !!this.state.itemsMap && !!matchingItems &&                        
+                        <div className='explorer'>
+                            {this.getItemTypeTogglers()}
+                            <div className='items-menu'>
+                                <input id='itemsSearch'
+                                    className={`items-search-${this.getCurrentListItemType()}`}
+                                    type='text'
+                                    onChange={(e) => this.setState({
+                                                    itemPrefix: e.target.value
+                                                })}/>
+                                <ItemsList className='item-list'
+                                    items={matchingItems}
+                                    selectedItem = {this.state.selectedItem}
+                                    onClick={(item) => this.selectItem(item)}></ItemsList>
+                            </div>                                            
+                        {!!this.state.selectedItem &&                         
+                            <div className='item-details-container'>
+                                <ItemDetailsView item={this.state.selectedItem}
+                                                 grammaticalData={this.grammaticalData}
+                                                 onSelectItem={(item) => this.selectItem(item)}
+                                                 onUpdateItem={(item) => this.updateItem(item)}></ItemDetailsView>   
+                            </div>
+                        }                           
+                    </div>
+                    }
+                </div>);
     }
 }
 
 // ========================================
 
-document.body.addEventListener('click', this.handleBodyClick); 
-
 ReactDOM.render(
-  <VerbsExplorer />,
+  <Explorer />,
   document.getElementById('root')
 );
