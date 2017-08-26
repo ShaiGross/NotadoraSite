@@ -1,0 +1,341 @@
+// containers
+
+$containerWidth: 100%;
+$containerHeight: 100%;
+$containerPosition: fixed;
+
+// item and item list
+$numOfItemsInList: 15;
+$itemHeigt: 20px;
+$itemVerticalPadding: $itemHeigt / 2;
+$itemBorderStyle: 1px;
+$itemListHeight: ($itemHeigt * $numOfItemsInList) + 
+                 ($itemVerticalPadding * 2) * $numOfItemsInList + 
+                 ($itemBorderStyle * 2) * $numOfItemsInList;  
+$itemMenuWidth: 20%;
+$itemListTop: 10%;
+
+// item details
+$itemDetailsWidth: 70%;
+$itemDetailsMarginLeft: 1%;
+$itemLabelsMarginLeft: 2%;
+
+// Grammatical items colors
+$selectedBgColor: antiquewhite;
+
+$verbColor:  cornflowerblue;
+$verbBgColor: aliceblue;
+$verbHoverColor: dodgerblue;
+
+$tenseColor: palevioletred;
+$tenseBgColor: lightpink;
+$tenseHoverColor: Crimson;
+
+$personColor: mediumpurple;
+$personBgColor: lavender;
+$personHoverColor: rebeccapurple;
+
+$conjugationRuleColor: darkgreen;
+$conjugationRuleBgColor: palegreen;
+$conjugationRuleHoverColor: forestgreen;
+
+.container {
+    width: $containerWidth;
+    height: $containerHeight;
+}
+
+body {
+    @extend .container;        
+    position: $containerPosition;
+
+    .windowContainer {        
+        @extend body; 
+    }
+
+    .explorer {
+        position: fixed;
+        height: $containerHeight;
+        width: $containerWidth;
+        display: flex;
+        justify-content: center;
+        top: 30px;
+    }
+}
+
+.item-types-buttons-container {
+    
+    position: fixed;
+    top: 0%;
+    left: 0%;
+    text-align: center;
+    border-bottom: 1px;
+    border-bottom-style: groove;
+    border-right: 1px;
+    border-right-style: groove;
+
+    h3 {
+        cursor: pointer;
+        display: inline;
+        margin-right: 5px;
+        margin-left: 5px;
+    }
+
+    h3:hover {
+        font-weight: bold;
+    }
+
+    .item-toggler-verb {
+        color: $verbColor;
+    }
+
+    .item-toggler-tense {
+        color: $tenseColor;
+    }
+
+    .item-toggler-person {
+        color: $personColor;
+    }
+
+    .item-toggler-conjugationRule {
+        color: $conjugationRuleColor;
+    }
+}
+
+.items-menu  {
+    
+    min-width: max-content;
+    // position: absolute;
+    height: 50%;
+    top: $itemListTop;    
+    // width: $itemMenuWidth;
+
+    input {
+        text-align: center;
+        font-weight: bold;    
+        width: 99%;
+        height: $itemHeigt;
+    }
+
+    .items-search-verb {
+        @extend input;
+        color: $verbColor;
+    }
+
+    .items-search-tense {
+        @extend input;
+        color: $tenseColor;
+    }
+
+    .items-search-person {
+        @extend input;
+        color: $personColor;
+    }
+
+    .items-search-conjugationRule {
+        @extend input;
+        color: $conjugationRuleColor;
+    }
+
+    .items-list {    
+        width: 100%;          
+        direction: rtl;            
+        max-height: $itemListHeight;              
+        scroll-behavior: smooth;    
+        overflow-x: hidden;
+        overflow-y: auto;
+        
+        .item-list-view {    
+            text-align: center;
+            padding-top: $itemVerticalPadding;
+            padding-bottom: $itemVerticalPadding;    
+            border-top: $itemBorderStyle;
+            border-bottom: $itemBorderStyle;
+            border-right: 2px;
+            border-left: 2px;
+            border-style: solid;
+            cursor: pointer;
+            height: $itemHeigt;
+            font-weight: bold;    
+            direction: ltr;
+        }
+
+        .verb-list-view, 
+        .tense-list-view,
+        .person-list-view,
+        .conjugationRule-list-view
+        {
+            @extend .item-list-view;    
+        }
+
+
+        .verb-list-view,  {    
+            color: $verbColor;
+        }
+
+        .tense-list-view {
+            color: $tenseColor;
+        }
+
+        .person-list-view {
+            color: $personColor;
+        }
+
+        .conjugationRule-list-view {
+            color: $conjugationRuleColor;
+        }
+
+        .verb-list-view:hover {
+            background-color: $verbBgColor;
+            color: $verbHoverColor;
+        }
+
+        .tense-list-view:hover {
+            background-color: $tenseBgColor;
+            color: $tenseHoverColor;
+        }
+
+        .person-list-view:hover {
+            background-color: $personBgColor;    
+            color:$personHoverColor;
+        }
+
+        .conjugationRule-list-view:hover {
+            background-color: $conjugationRuleBgColor;
+            color: $conjugationRuleHoverColor;
+        }
+
+        .verb-list-view-selected {    
+            background-color: $selectedBgColor;
+            @extend .item-list-view;
+            color: $verbColor;
+        }
+
+        .tense-list-view-selected {    
+            background-color: $selectedBgColor;
+            @extend .item-list-view;
+            color: $tenseColor;
+        }
+
+        .person-list-view-selected {    
+            background-color: $selectedBgColor;
+            @extend .item-list-view;
+            color: $personColor;
+        }
+
+        .conjugationRule-list-view-selected {    
+            background-color: $selectedBgColor;
+            @extend .item-list-view;
+            color: $conjugationRuleColor;
+        }
+    }
+}
+
+.item-details-container {
+    
+    // position: absolute;    
+    top: $itemListTop; 
+    min-height: $itemListHeight + $itemHeigt;
+    width: 99% - ($itemMenuWidth + $itemDetailsMarginLeft);
+    // left: $itemMenuWidth + $itemDetailsMarginLeft;
+
+    .item-details {
+        @extend .container;
+        // position: absolute;
+        border-top-style: groove;
+        border-bottom-style: groove;
+    }    
+
+    .labels {
+        margin-bottom: 2%;
+        text-decoration: underline;
+        margin-left: $itemLabelsMarginLeft;
+    }
+
+    .item-details-title {
+        text-align: center;
+        margin-top: 2%;
+        position: relative;        
+        font-size: xx-large;   
+    }
+
+    .verb-details {    
+
+        @extend .item-details;        
+
+        .verb-title {
+            @extend .item-details-title;
+            color: $verbHoverColor;    
+        }
+
+        .verbLabels {
+            @extend .labels;                           
+        }
+
+        .translation {
+            @extend .verbLabels;
+        }
+    
+        .participles-label {
+            @extend .verbLabels;
+        }
+
+        .conjugations-label {
+            @extend .verbLabels;
+        }
+
+        .verb-participles {   
+
+            margin-left: $itemLabelsMarginLeft;
+            border-style: groove;
+            width: fit-content;            
+            color: $tenseColor;
+        }
+
+        .verb-rules {
+            margin-left: $itemLabelsMarginLeft;
+            color: $conjugationRuleColor;
+
+            .verb-irregular-rules-title {
+                text-decoration: underline;
+            }
+
+            .verb-rule {
+                cursor: pointer;
+                text-decoration: underline;
+            }
+        }
+    }   
+    
+    .conjugation-rule-details-container {
+        
+        @extend .item-details;
+        @extend .container;
+
+        .conjugation-rule-details {
+            
+            .conjugation-rule-title {
+                @extend .container;
+                @extend .item-details-title;
+                color: $conjugationRuleColor;
+            }
+
+            .conjugation-rule-desc-label {
+                @extend .labels;
+            }
+
+            .conjugation-rule-desc {
+                margin-left: $itemLabelsMarginLeft;
+                width: fit-content;
+                min-height: 45%;                
+                border-style: ridge;
+                cursor: pointer;
+            }
+
+            .conjugation-rule-desc-edit {
+                @extend .conjugation-rule-desc;
+                cursor: auto;
+                width: 65%;
+            }
+        }
+    }
+}
