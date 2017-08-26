@@ -44,8 +44,13 @@ function ItemListView(props) {
     case 'verb':
         return <div className={elementClass}
                     onClick={e => props.onClick(item)}>{`${item.englishInfinative} - ${item.spanishInfinative}`}</div>
-    }
+    default: {
+        return null;
+        console.log(`Factory failed for type "${itemType}"`);
+    }   
 }
+                }
+    
 
 function ItemsList(props) {
 
@@ -231,7 +236,14 @@ class Explorer extends React.Component {
         const itemId = item.id;
         this.grammaticalData[itemMapName][itemId] = item;
 
-        fetcher.updateGrammObj(item);
+        const updatePromise = fetcher.updateGrammObj(item);
+
+        updatePromise.then(updateReturnItem => {
+            console.log(`suffesfully updated ${JSON.stringify(updateReturnItem)}`);
+        }).catch(msg => {
+            console.log(`failed to update ${JSON.stringify(item)}`);
+            this.setState({errors: msg});
+        });
     }
 
     render() {   
@@ -244,7 +256,10 @@ class Explorer extends React.Component {
                     {!!this.state.errors && 
                         <div className='errors'>{`error: ${this.state.errors.message}`}</div>
                     }
-                    {!this.state.errors && !!this.state.itemsMap && !!matchingItems &&                        
+                    {!this.state.errors && 
+                     !this.loading &&
+                     !!this.state.itemsMap && 
+                     !!matchingItems &&                        
                         <div className='explorer'>
                             {this.getItemTypeTogglers()}
                             <div className='items-menu'>
