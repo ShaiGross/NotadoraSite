@@ -6,11 +6,12 @@ body, body .windowContainer {
   position: fixed; }
   body .explorer {
     position: fixed;
-    height: 100%;
-    width: 100%;
+    height: 80%;
+    width: 80%;
     display: flex;
     justify-content: center;
-    top: 30px; }
+    top: 30px;
+    left: 5%; }
 
 .item-types-buttons-container {
   position: fixed;
@@ -39,7 +40,6 @@ body, body .windowContainer {
 
 .items-menu {
   min-width: max-content;
-  height: 50%;
   top: 10%; }
   .items-menu input, .items-menu .items-search-verb, .items-menu .items-search-tense, .items-menu .items-search-person, .items-menu .items-search-conjugationRule {
     text-align: center;
@@ -64,7 +64,8 @@ body, body .windowContainer {
     .items-menu .items-list .item-list-view, .items-menu .items-list .verb-list-view,
     .items-menu .items-list .tense-list-view,
     .items-menu .items-list .person-list-view,
-    .items-menu .items-list .conjugationRule-list-view, .items-menu .items-list .verb-list-view-selected, .items-menu .items-list .tense-list-view-selected, .items-menu .items-list .person-list-view-selected, .items-menu .items-list .conjugationRule-list-view-selected {
+    .items-menu .items-list .conjugationRule-list-view,
+    .items-menu .items-list .stub-list-view, .items-menu .items-list .verb-list-view-selected, .items-menu .items-list .tense-list-view-selected, .items-menu .items-list .person-list-view-selected, .items-menu .items-list .conjugationRule-list-view-selected {
       text-align: center;
       padding-top: 10px;
       padding-bottom: 10px;
@@ -85,6 +86,12 @@ body, body .windowContainer {
       color: mediumpurple; }
     .items-menu .items-list .conjugationRule-list-view {
       color: darkgreen; }
+    .items-menu .items-list .stub-list-view {
+      color: cornflowerblue;
+      background-color: aliceblue;
+      direction: ltr;
+      height: 100%;
+      border-color: red; }
     .items-menu .items-list .verb-list-view:hover {
       background-color: aliceblue;
       color: dodgerblue; }
@@ -97,6 +104,8 @@ body, body .windowContainer {
     .items-menu .items-list .conjugationRule-list-view:hover {
       background-color: palegreen;
       color: forestgreen; }
+    .items-menu .items-list .stub-list-view:hover {
+      color: red; }
     .items-menu .items-list .verb-list-view-selected {
       background-color: antiquewhite;
       color: cornflowerblue; }
@@ -112,7 +121,7 @@ body, body .windowContainer {
 
 .item-details-container {
   top: 10%;
-  min-height: 650px;
+  height: 650px;
   width: 78%; }
   .item-details-container .item-details, .item-details-container .verb-details, .item-details-container .conjugation-rule-details-container {
     border-top-style: groove;

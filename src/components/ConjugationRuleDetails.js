@@ -58,6 +58,10 @@ class ConjugationRuleDetails extends React.Component {
         e.stopPropagation();
     }
 
+    enterDescEdit() {
+        
+    }
+
     saveDescription(e) {
         
         const conjugationRule = this.state.conjugationRule;

@@ -17,7 +17,7 @@ switch (itemType) {
     case 'conjugationRule':
         return (<ConjugationRuleDetails conjugationRule={item}
                              grammaticalData={props.grammaticalData}
-                             onSelectItem={(item) => props.onSetItem(item)}
+                             onSelectItem={(item) => props.onSelectItem(item)}
                              onUpdateItem={(item) => props.onUpdateItem(item)}></ConjugationRuleDetails>);
     default:
         break;
@@ -54,17 +54,31 @@ function ItemListView(props) {
 
 function ItemsList(props) {
 
-    const items = props.items;    
-    
-    return (
-        <div className='items-list'>
-            {items.map(item => {
-                return <ItemListView key={item.id} 
-                                     item={item}
-                                     isSelected={item === props.selectedItem}                                     
-                                     onClick={(item) => {props.onClick(item)}}></ItemListView>
-            })}
-        </div>
+    const {items, itemPrefix, itemType, addVerb} = props;      
+    const prefix = !!itemPrefix ? itemPrefix.toLowerCase() : '';
+
+    const newVerb = itemType === 'verb'
+                    && !!itemPrefix
+                    && !items.length
+                    &&  (prefix.endsWith('ar') 
+                         || prefix.endsWith('er')
+                         || prefix.endsWith('ir'));
+        
+    return ( 
+        
+            <div className='items-list'>
+            {newVerb ?
+                <div className='stub-list-view'
+                     onClick={e => addVerb(itemPrefix)}>{`add new verb ${itemPrefix.toLowerCase()}?`}</div> 
+            :            
+                items.map(item => {
+                    return <ItemListView key={item.id} 
+                                        item={item}
+                                        isSelected={item === props.selectedItem}                                     
+                                        onClick={(item) => {props.onClick(item)}}></ItemListView>
+                })
+            }
+            </div>
     );
 }
 
@@ -176,36 +190,7 @@ class Explorer extends React.Component {
     }
 
     getItemTypeTogglers() {
-        return (<span className='item-types-buttons-container'>
-                        <h3  className='item-toggler-verb'
-                            onClick={e => 
-                            {                                
-                                this.setState({
-                                    itemsMap: this.grammaticalData.verbs
-                            })}
-                        }>verbs</h3>
-                        <h3 className='item-toggler-tense'
-                            onClick={e => 
-                            {                                
-                                this.setState({
-                                    itemsMap: this.grammaticalData.tenses
-                            })}
-                        }>tenses</h3>
-                        <h3 className='item-toggler-person'
-                            onClick={e => 
-                            {                                
-                                this.setState({
-                                    itemsMap: this.grammaticalData.persons
-                            })}
-                        }>persons</h3>
-                        <h3 className='item-toggler-conjugationRule'
-                            onClick={e => 
-                            {                                
-                                this.setState({
-                                    itemsMap: this.grammaticalData.conjugationRules
-                            })}
-                        }>conjugationRules</h3>
-                    </span>);
+        
     }
 
     getCurrentListItemType() {
@@ -219,16 +204,14 @@ class Explorer extends React.Component {
         return items[0].type;
     }
 
-    selectItem(item) {
+    selectItem(selectedItem) {
            
-        const itemMapName = item.type + 's';
+        const itemMapName = selectedItem.type + 's';
         const itemsMap = this.grammaticalData[itemMapName];
+        const currListType = this.getCurrentListItemType();
+        const itemPrefix = (selectedItem.type == currListType) ? this.state.itemPrefix : '';
 
-        this.setState({
-            selectedItem: item
-            ,itemsMap: itemsMap
-            ,itemPrefix: ''
-        });
+        this.setState({selectedItem, itemsMap, itemPrefix});
     }
 
     updateItem(item) {
@@ -246,45 +229,147 @@ class Explorer extends React.Component {
         });
     }
 
+    addVerb(spanishInf) {
+
+        var verbAddPromise = fetcher.addVerb(spanishInf);
+
+        this.setState({
+            loading: true
+        })
+
+        verbAddPromise.then(verb => {
+            
+            const verbsPromise = fetcher.fetchGrammObjList('verbs');            
+
+            verbsPromise.then(verbs => {
+                this.grammaticalData.verbs = verbs;
+                this.selectItem(verb);
+                this.setState({
+                    loading: false
+                    ,itemsMap: verbs});
+            })
+            
+            
+        }) 
+    }
+
+    handlePageClick() {
+        this.setState({
+            selectedItem: null,
+            itemPrefix: ''            
+        })
+    }
+
     render() {   
         
-        const items = (!!this.state.itemsMap) ? Object.values(this.state.itemsMap)  : null;
+        const { 
+            errors
+            ,loading
+            ,itemPrefix
+            ,itemsMap
+            ,selectedItem 
+        } = this.state;
+
+        const items = (!!itemsMap) ? Object.values(itemsMap)  : null;
         const matchingItems = (!!items) ? items.filter(i => this.isItemMatchingPrefix(i)) : null;        
+        const currListType = this.getCurrentListItemType();
+
+        const itemMenu = () => {
+            return (
+                <div className='items-menu'>
+                                    <input id='itemsSearch'
+                                        className={`items-search-${currListType}`}
+                                        type='text'
+                                        value={itemPrefix}
+                                        onChange={(e) => this.setState({
+                                                        itemPrefix: e.target.value
+                                                    })}/>
+                                    <ItemsList className='item-list'
+                                        items={matchingItems}
+                                        itemPrefix={itemPrefix}
+                                        selectedItem = {selectedItem}
+                                        itemType = {currListType}
+                                        addVerb = {(spanishInf) => this.addVerb(spanishInf)}
+                                        onClick={(item) => this.selectItem(item)}></ItemsList>
+                                </div>        
+            );
+        }   
         
+        const itemTypeTogglers = () => {
+            
+            const currListType = this.getCurrentListItemType();
+
+            return (
+                <span className='item-types-buttons-container'>
+                    <h3 className='item-toggler-verb'
+                        onClick={e => {                                
+                            currListType !== 'verb' && 
+                            
+                            this.setState({
+                                itemsMap: this.grammaticalData.verbs
+                                ,itemPrefix: ''
+                            });
+                        }}>verbs
+                    </h3>
+                    <h3 className='item-toggler-tense'
+                        onClick={e =>  {                                
+                            currListType !== 'tense' &&
+
+                            this.setState({
+                                itemsMap: this.grammaticalData.tenses
+                                ,itemPrefix: ''
+                            })
+                        }}>tenses
+                    </h3>
+                    <h3 className='item-toggler-person'
+                        onClick={e =>  {                                
+                            currListType !== 'person' &&
+
+                            this.setState({
+                                itemsMap: this.grammaticalData.persons
+                                ,itemPrefix: ''
+                            })
+                        }}>persons
+                    </h3>
+                    <h3 className='item-toggler-conjugationRule'
+                        onClick={e => 
+                        {                                
+                            currListType !== 'conjugationRule' &&
+                            
+                            this.setState({
+                                itemsMap: this.grammaticalData.conjugationRules
+                                ,itemPrefix: ''
+                            });
+                        }
+                    }>conjugationRules
+                    </h3>
+                </span>
+            );
+        }
+
         return (
-                <div className='windowContainer'>                                        
-                    {!!this.state.errors && 
-                        <div className='errors'>{`error: ${this.state.errors.message}`}</div>
-                    }
-                    {!this.state.errors && 
-                     !this.loading &&
-                     !!this.state.itemsMap && 
-                     !!matchingItems &&                        
-                        <div className='explorer'>
-                            {this.getItemTypeTogglers()}
-                            <div className='items-menu'>
-                                <input id='itemsSearch'
-                                    className={`items-search-${this.getCurrentListItemType()}`}
-                                    type='text'
-                                    onChange={(e) => this.setState({
-                                                    itemPrefix: e.target.value
-                                                })}/>
-                                <ItemsList className='item-list'
-                                    items={matchingItems}
-                                    selectedItem = {this.state.selectedItem}
-                                    onClick={(item) => this.selectItem(item)}></ItemsList>
-                            </div>                                            
-                        {!!this.state.selectedItem &&                         
-                            <div className='item-details-container'>
-                                <ItemDetailsView item={this.state.selectedItem}
-                                                 grammaticalData={this.grammaticalData}
-                                                 onSelectItem={(item) => this.selectItem(item)}
-                                                 onUpdateItem={(item) => this.updateItem(item)}></ItemDetailsView>   
-                            </div>
-                        }                           
-                    </div>
-                    }
-                </div>);
+            <div className='windowContainer' onClick={e => this.handlePageClick()}>                                        
+                { !!errors ? 
+                    <div className='errors'>{`error: ${errors.message}`}</div>
+                : !!loading ? 
+                    <div className='loading'>loading...</div>                    
+                : !!this.state.itemsMap &&                                             
+                    <div className='explorer' onClick={e => e.stopPropagation()}>
+                        {itemTypeTogglers()}
+                        {itemMenu()}                                                
+                    {!!this.state.selectedItem &&                         
+                        <div className='item-details-container'>
+                            <ItemDetailsView    item={selectedItem}
+                                                grammaticalData={this.grammaticalData}
+                                                itemPrefix={itemPrefix}
+                                                onSelectItem={(item) => this.selectItem(item)}
+                                                onUpdateItem={(item) => this.updateItem(item)}></ItemDetailsView>   
+                        </div>
+                    }                           
+                    </div>                        
+                }
+            </div>
+        );
     }
 }
 

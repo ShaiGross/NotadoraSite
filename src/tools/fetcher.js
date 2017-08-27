@@ -73,6 +73,26 @@ const fetcher = {
             }).catch(msg => reject(msg));
         });
     }
+    ,addVerb: function(spanishInf) {
+        return new Promise((resolve, reject) => {
+            fetch(`${srv}/verbs/${spanishInf}`, {
+                mode: 'cors'
+            })
+            .then(res => {
+                if (res.ok) {
+                    return res.json();
+                }
+                else {
+                    reject(`failed to look for berb ${spanishInf}`)
+                }
+            })
+            .then(verb => {
+                verb.type = 'verb';
+                resolve(verb);
+            })
+            .catch(msg => reject(msg));
+        });
+    }
 }
 
 export { 

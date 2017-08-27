@@ -54,11 +54,12 @@ body {
 
     .explorer {
         position: fixed;
-        height: $containerHeight;
-        width: $containerWidth;
+        height: 80%;
+        width: 80%;
         display: flex;
         justify-content: center;
         top: 30px;
+        left: 5%;
     }
 }
 
@@ -104,8 +105,7 @@ body {
 .items-menu  {
     
     min-width: max-content;
-    // position: absolute;
-    height: 50%;
+    // position: absolute;    
     top: $itemListTop;    
     // width: $itemMenuWidth;
 
@@ -158,11 +158,12 @@ body {
             font-weight: bold;    
             direction: ltr;
         }
-
+        
         .verb-list-view, 
         .tense-list-view,
         .person-list-view,
-        .conjugationRule-list-view
+        .conjugationRule-list-view,
+        .stub-list-view
         {
             @extend .item-list-view;    
         }
@@ -184,6 +185,14 @@ body {
             color: $conjugationRuleColor;
         }
 
+        .stub-list-view {
+            color: $verbColor;
+            background-color: $verbBgColor;
+            direction: ltr;
+            height: 100%;
+            border-color: red;
+        }
+
         .verb-list-view:hover {
             background-color: $verbBgColor;
             color: $verbHoverColor;
@@ -202,6 +211,10 @@ body {
         .conjugationRule-list-view:hover {
             background-color: $conjugationRuleBgColor;
             color: $conjugationRuleHoverColor;
+        }
+
+        .stub-list-view:hover {
+            color: red;            
         }
 
         .verb-list-view-selected {    
@@ -226,21 +239,18 @@ body {
             background-color: $selectedBgColor;
             @extend .item-list-view;
             color: $conjugationRuleColor;
-        }
+        }        
     }
 }
 
 .item-details-container {
-    
-    // position: absolute;    
+           
     top: $itemListTop; 
-    min-height: $itemListHeight + $itemHeigt;
-    width: 99% - ($itemMenuWidth + $itemDetailsMarginLeft);
-    // left: $itemMenuWidth + $itemDetailsMarginLeft;
+    height: $itemListHeight + $itemHeigt;
+    width: 99% - ($itemMenuWidth + $itemDetailsMarginLeft);    
 
     .item-details {
-        @extend .container;
-        // position: absolute;
+        @extend .container;        
         border-top-style: groove;
         border-bottom-style: groove;
     }    
