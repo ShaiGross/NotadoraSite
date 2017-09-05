@@ -1,24 +1,35 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './styles/index.css';
-import {fetcher} from './tools/fetcher.js';
-import {VerbDetails} from './components/VerbDetails.js'
+
+import {Fetcher}                from './tools/fetcher.js';
+import {VerbDetails}            from './components/VerbDetails.js'
 import {ConjugationRuleDetails} from './components/ConjugationRuleDetails.js'
+import {PersonDetails}          from './components/PersonDetails.js'
+import {TenseDetails}           from './components/TenseDetails'
 
 function ItemDetailsView(props) {
-    const item = props.item;
+    const {item, grammaticalData} = props;
     const itemType = item.type;
 
 switch (itemType) {
     case 'verb':
         return (<VerbDetails verb={item}
-                             grammaticalData={props.grammaticalData}
+                             grammaticalData={grammaticalData}
                              onSelectItem={(item) => props.onSelectItem(item)}></VerbDetails>);
     case 'conjugationRule':
         return (<ConjugationRuleDetails conjugationRule={item}
-                             grammaticalData={props.grammaticalData}
+                             grammaticalData={grammaticalData}
                              onSelectItem={(item) => props.onSelectItem(item)}
                              onUpdateItem={(item) => props.onUpdateItem(item)}></ConjugationRuleDetails>);
+    case 'tense':
+        return (<TenseDetails tense={item}
+                              grammaticalData={grammaticalData}
+                              onSelectItem={(item) => props.onSelectItem(item)}></TenseDetails>)
+    case 'person':
+        return (<PersonDetails person={item}
+                             grammaticalData={grammaticalData}>
+                </PersonDetails>);
     default:
         break;
 }
@@ -32,26 +43,25 @@ function ItemListView(props) {
     const elementClass = !props.isSelected ? `${itemType}${classSuffix}`  : `${itemType}${classSuffix}${selectedSuffix}`
 
     switch (itemType) {
-    case 'tense':
-        return <div className={elementClass}
-                    onClick={e => props.onClick(item)}>{item.name}</div>            
-    case 'person':
-        return <div className={elementClass}
-                    onClick={e => props.onClick(item)}>{`${item.spanishExpression} - ${item.description}`}</div>            
-    case 'conjugationRule':
-        return <div className={elementClass}
-                    onClick={e => props.onClick(item)}>{`${item.name}`}</div>        
-    case 'verb':
-        return <div className={elementClass}
-                    onClick={e => props.onClick(item)}>{`${item.englishInfinative} - ${item.spanishInfinative}`}</div>
-    default: {
-        return null;
-        console.log(`Factory failed for type "${itemType}"`);
-    }   
+        case 'tense':
+            return <div className={elementClass}
+                        onClick={e => props.onClick(item)}>{item.name}</div>            
+        case 'person':
+            return <div className={elementClass}
+                        onClick={e => props.onClick(item)}>{`${item.spanishExpression} - ${item.description}`}</div>            
+        case 'conjugationRule':
+            return <div className={elementClass}
+                        onClick={e => props.onClick(item)}>{`${item.name}`}</div>        
+        case 'verb':
+            return <div className={elementClass}
+                        onClick={e => props.onClick(item)}>{`${item.englishInfinative} - ${item.spanishInfinative}`}</div>
+        default: {
+            return null;
+            console.log(`Factory failed for type "${itemType}"`);
+        }   
+    }
 }
-                }
     
-
 function ItemsList(props) {
 
     const {items, itemPrefix, itemType, addVerb} = props;      
@@ -101,42 +111,55 @@ class Explorer extends React.Component {
             ,persons: []
             ,conjugationRules: []
             ,verbs: []
+            ,instructions: []
         };
 
         this.loadStartupInfo();        
     }
 
+    loadGrammaticalData() {
+        
+        const tensesPromise = Fetcher.fetchGrammObjList('tenses');
+        const personsPromise = Fetcher.fetchGrammObjList('persons');
+        const conjugationRulesPromise = Fetcher.fetchGrammObjList('conjugationRules');
+        const verbsPromise = Fetcher.fetchGrammObjList('verbs');
+        const instructionsPromise = Fetcher.fetchGrammObjList('instructions');
+
+        tensesPromise.then(tenses => {
+                this.grammaticalData.tenses = tenses;
+        });
+        personsPromise.then(persons => {                
+            this.grammaticalData.persons = persons;
+        });
+        conjugationRulesPromise.then(conjugationRules => {                
+            this.grammaticalData.conjugationRules = conjugationRules;
+        });
+        verbsPromise.then(verbs => {                
+            this.grammaticalData.verbs = verbs;                           
+        });
+        instructionsPromise.then(instructions => {
+            this.grammaticalData.instructions = instructions;
+        });
+
+        const allGrammPromises = [
+            tensesPromise
+            ,personsPromise
+            ,conjugationRulesPromise
+            ,verbsPromise
+            ,instructionsPromise
+        ];
+
+        return Promise.all(allGrammPromises);
+    }   
     // methods
     loadStartupInfo() {
-        
-        const tensesPromise = fetcher.fetchGrammObjList('tenses');
-        const personsPromise = fetcher.fetchGrammObjList('persons');
-        const conjugationRulesPromise = fetcher.fetchGrammObjList('conjugationRules');
-        const verbsPromise = fetcher.fetchGrammObjList('verbs');
+                
+        const allGrammPromises = this.loadGrammaticalData();
 
-        const allGrammPromises = [tensesPromise ,personsPromise ,conjugationRulesPromise, verbsPromise];                                 
-        
-        Promise.all(allGrammPromises)
-        .then(() => {
-            
-            tensesPromise.then(tenses => {
-                this.grammaticalData.tenses = tenses;
-            });
-            personsPromise.then(persons => {                
-                this.grammaticalData.persons = persons;
-            });
-            conjugationRulesPromise.then(conjugationRules => {                
-                this.grammaticalData.conjugationRules = conjugationRules;
-            });
-            verbsPromise.then(verbs => {                
-                this.grammaticalData.verbs = verbs;
-                this.setState({
-                    itemsMap: this.grammaticalData.verbs
-                });                
-            });                    
-
+        allGrammPromises.then(() => {                                                      
             this.setState({
-                loading: false                
+                loading: false
+                ,itemsMap: this.grammaticalData.verbs
             });
         })        
         .catch(msg => {            
@@ -157,34 +180,34 @@ class Explorer extends React.Component {
         }
 
         switch (itemType) {
-        case 'tense':
-            
-            const tenseName = item.name.toLowerCase();
-            return tenseName.startsWith(prefix);
+            case 'tense':
+                
+                const tenseName = item.name.toLowerCase();
+                return tenseName.startsWith(prefix);
 
-        case 'person':
-            
-            const spanishExpression = (!!item.spanishExpression) ? item.spanishExpression.toLowerCase() : '';
-            const desc = item.description.toLowerCase();
-            return spanishExpression.startsWith(prefix) || 
-                   desc.includes(`${prefix}`);
+            case 'person':
+                
+                const spanishExpression = (!!item.spanishExpression) ? item.spanishExpression.toLowerCase() : '';
+                const desc = item.description.toLowerCase();
+                return spanishExpression.startsWith(prefix) || 
+                    desc.includes(`${prefix}`);
 
-        case 'conjugationRule':
-            
-            const seperationIndex = item.name.indexOf(':');
-            const conjRuleName = item.name.substring(0, seperationIndex)
-                                          .toLowerCase();
-            const ruleTenseName = item.name.substring(seperationIndex + 1).toLowerCase();
+            case 'conjugationRule':
+                
+                const seperationIndex = item.name.indexOf(':');
+                const conjRuleName = item.name.substring(0, seperationIndex)
+                                            .toLowerCase();
+                const ruleTenseName = item.name.substring(seperationIndex + 1).toLowerCase();
 
-            return conjRuleName.startsWith(prefix) || 
-                   ruleTenseName.startsWith(prefix);
+                return conjRuleName.startsWith(prefix) || 
+                    ruleTenseName.startsWith(prefix);
 
-        case 'verb':
-            const spanishInf = item.spanishInfinative.toLowerCase();
-            const englishInf = item.englishInfinative.toLowerCase();
-            return spanishInf.startsWith(prefix) || 
-                   englishInf.startsWith(prefix) ||
-                   englishInf.startsWith(`to ${prefix}`);
+            case 'verb':
+                const spanishInf = item.spanishInfinative.toLowerCase();
+                const englishInf = item.englishInfinative.toLowerCase();
+                return spanishInf.startsWith(prefix) || 
+                    englishInf.startsWith(prefix) ||
+                    englishInf.startsWith(`to ${prefix}`);
 
         }
     }
@@ -219,7 +242,7 @@ class Explorer extends React.Component {
         const itemId = item.id;
         this.grammaticalData[itemMapName][itemId] = item;
 
-        const updatePromise = fetcher.updateGrammObj(item);
+        const updatePromise = Fetcher.updateGrammObj(item);
 
         updatePromise.then(updateReturnItem => {
             console.log(`suffesfully updated ${JSON.stringify(updateReturnItem)}`);
@@ -231,7 +254,7 @@ class Explorer extends React.Component {
 
     addVerb(spanishInf) {
 
-        var verbAddPromise = fetcher.addVerb(spanishInf);
+        var verbAddPromise = Fetcher.addVerb(spanishInf);
 
         this.setState({
             loading: true
@@ -239,7 +262,7 @@ class Explorer extends React.Component {
 
         verbAddPromise.then(verb => {
             
-            const verbsPromise = fetcher.fetchGrammObjList('verbs');            
+            const verbsPromise = Fetcher.fetchGrammObjList('verbs');            
 
             verbsPromise.then(verbs => {
                 this.grammaticalData.verbs = verbs;
@@ -267,8 +290,7 @@ class Explorer extends React.Component {
             ,loading
             ,itemPrefix
             ,itemsMap
-            ,selectedItem 
-        } = this.state;
+            ,selectedItem } = this.state;
 
         const items = (!!itemsMap) ? Object.values(itemsMap)  : null;
         const matchingItems = (!!items) ? items.filter(i => this.isItemMatchingPrefix(i)) : null;        
@@ -353,11 +375,11 @@ class Explorer extends React.Component {
                     <div className='errors'>{`error: ${errors.message}`}</div>
                 : !!loading ? 
                     <div className='loading'>loading...</div>                    
-                : !!this.state.itemsMap &&                                             
+                : !!itemsMap &&                                             
                     <div className='explorer' onClick={e => e.stopPropagation()}>
                         {itemTypeTogglers()}
                         {itemMenu()}                                                
-                    {!!this.state.selectedItem &&                         
+                    {!!selectedItem &&                         
                         <div className='item-details-container'>
                             <ItemDetailsView    item={selectedItem}
                                                 grammaticalData={this.grammaticalData}

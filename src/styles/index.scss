@@ -268,6 +268,11 @@ body {
         font-size: xx-large;   
     }
 
+    .item-link {        
+        cursor: pointer;
+        text-decoration: underline;            
+    }
+
     .verb-details {    
 
         @extend .item-details;        
@@ -275,22 +280,18 @@ body {
         .verb-title {
             @extend .item-details-title;
             color: $verbHoverColor;    
-        }
-
-        .verbLabels {
-            @extend .labels;                           
-        }
+        }        
 
         .translation {
-            @extend .verbLabels;
+            @extend .labels;
         }
     
         .participles-label {
-            @extend .verbLabels;
+            @extend .labels;
         }
 
         .conjugations-label {
-            @extend .verbLabels;
+            @extend .labels;
         }
 
         .verb-participles {   
@@ -310,8 +311,7 @@ body {
             }
 
             .verb-rule {
-                cursor: pointer;
-                text-decoration: underline;
+                @extend .item-link;
             }
         }
     }   
@@ -327,7 +327,7 @@ body {
                 @extend .container;
                 @extend .item-details-title;
                 color: $conjugationRuleColor;
-            }
+            }            
 
             .conjugation-rule-desc-label {
                 @extend .labels;
@@ -346,6 +346,46 @@ body {
                 cursor: auto;
                 width: 65%;
             }
+        }
+    }
+
+    .person-details {
+        @extend .item-details;
+
+        .person-title {
+            @extend .item-details-title;
+            color: $personColor;
+        }
+
+        .person-info-label {
+            @extend .labels;
+        }        
+
+        .person-plurality, 
+        .person-formality, 
+        .person-gender {
+            margin-left: $itemLabelsMarginLeft;
+        }
+    }
+
+    .tense-details {
+        @extend .item-details;
+
+        .tense-title {
+            @extend .item-details-title;
+            color: $tenseColor;
+        }  
+              
+        .tense-regular-conjugaiton-Label,
+        .tense-irregular-conjugaitons-Label {
+            @extend .labels;
+        }
+
+        .tense-rule,
+        .tense-irreg-rule {            
+            @extend .item-link;
+            margin-left: $itemLabelsMarginLeft;
+            color: $conjugationRuleColor;
         }
     }
 }

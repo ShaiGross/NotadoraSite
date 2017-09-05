@@ -1,7 +1,7 @@
 import {settings} from '../config/dev.js'
 
 const srv = settings.grammServer;
-const fetcher = {
+const Fetcher = {
     fetchGrammObjList: function (grammObjName) {
                 
         return new Promise((resolve, reject) => {
@@ -93,8 +93,27 @@ const fetcher = {
             .catch(msg => reject(msg));
         });
     }
+    ,getMatches: function(verbId) {
+        return new Promise((resolve, reject) => {
+            fetch(`${srv}/verbs/conjMatches/${verbId}`, {
+                mode: 'cors'
+            })
+            .then(res => 
+            {
+                if (res.ok) {
+                    return res.json()
+                } else {
+                    throw Error(`couldn't retrive conjugation matches for verb ${verbId}`);
+                }
+            })
+            .then(matches => resolve(matches))
+            .catch(msg => {
+                reject(msg);
+            });
+        });
+    }
 }
 
 export { 
-    fetcher 
+    Fetcher 
 };

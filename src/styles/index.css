@@ -1,4 +1,4 @@
-.container, body, body .windowContainer, .item-details-container .item-details, .item-details-container .verb-details, .item-details-container .conjugation-rule-details-container, .item-details-container .conjugation-rule-details-container .conjugation-rule-details .conjugation-rule-title {
+.container, body, body .windowContainer, .item-details-container .item-details, .item-details-container .verb-details, .item-details-container .conjugation-rule-details-container, .item-details-container .person-details, .item-details-container .tense-details, .item-details-container .conjugation-rule-details-container .conjugation-rule-details .conjugation-rule-title {
   width: 100%;
   height: 100%; }
 
@@ -123,18 +123,23 @@ body, body .windowContainer {
   top: 10%;
   height: 650px;
   width: 78%; }
-  .item-details-container .item-details, .item-details-container .verb-details, .item-details-container .conjugation-rule-details-container {
+  .item-details-container .item-details, .item-details-container .verb-details, .item-details-container .conjugation-rule-details-container, .item-details-container .person-details, .item-details-container .tense-details {
     border-top-style: groove;
     border-bottom-style: groove; }
-  .item-details-container .labels, .item-details-container .verb-details .verbLabels, .item-details-container .verb-details .translation, .item-details-container .verb-details .participles-label, .item-details-container .verb-details .conjugations-label, .item-details-container .conjugation-rule-details-container .conjugation-rule-details .conjugation-rule-desc-label {
+  .item-details-container .labels, .item-details-container .verb-details .translation, .item-details-container .verb-details .participles-label, .item-details-container .verb-details .conjugations-label, .item-details-container .conjugation-rule-details-container .conjugation-rule-details .conjugation-rule-desc-label, .item-details-container .person-details .person-info-label, .item-details-container .tense-details .tense-regular-conjugaiton-Label,
+  .item-details-container .tense-details .tense-irregular-conjugaitons-Label {
     margin-bottom: 2%;
     text-decoration: underline;
     margin-left: 2%; }
-  .item-details-container .item-details-title, .item-details-container .verb-details .verb-title, .item-details-container .conjugation-rule-details-container .conjugation-rule-details .conjugation-rule-title {
+  .item-details-container .item-details-title, .item-details-container .verb-details .verb-title, .item-details-container .conjugation-rule-details-container .conjugation-rule-details .conjugation-rule-title, .item-details-container .person-details .person-title, .item-details-container .tense-details .tense-title {
     text-align: center;
     margin-top: 2%;
     position: relative;
     font-size: xx-large; }
+  .item-details-container .item-link, .item-details-container .verb-details .verb-rules .verb-rule, .item-details-container .tense-details .tense-rule,
+  .item-details-container .tense-details .tense-irreg-rule {
+    cursor: pointer;
+    text-decoration: underline; }
   .item-details-container .verb-details .verb-title {
     color: dodgerblue; }
   .item-details-container .verb-details .verb-participles {
@@ -147,9 +152,6 @@ body, body .windowContainer {
     color: darkgreen; }
     .item-details-container .verb-details .verb-rules .verb-irregular-rules-title {
       text-decoration: underline; }
-    .item-details-container .verb-details .verb-rules .verb-rule {
-      cursor: pointer;
-      text-decoration: underline; }
   .item-details-container .conjugation-rule-details-container .conjugation-rule-details .conjugation-rule-title {
     color: darkgreen; }
   .item-details-container .conjugation-rule-details-container .conjugation-rule-details .conjugation-rule-desc, .item-details-container .conjugation-rule-details-container .conjugation-rule-details .conjugation-rule-desc-edit {
@@ -161,5 +163,17 @@ body, body .windowContainer {
   .item-details-container .conjugation-rule-details-container .conjugation-rule-details .conjugation-rule-desc-edit {
     cursor: auto;
     width: 65%; }
+  .item-details-container .person-details .person-title {
+    color: mediumpurple; }
+  .item-details-container .person-details .person-plurality,
+  .item-details-container .person-details .person-formality,
+  .item-details-container .person-details .person-gender {
+    margin-left: 2%; }
+  .item-details-container .tense-details .tense-title {
+    color: palevioletred; }
+  .item-details-container .tense-details .tense-rule,
+  .item-details-container .tense-details .tense-irreg-rule {
+    margin-left: 2%;
+    color: darkgreen; }
 
 /*# sourceMappingURL=index.css.map */

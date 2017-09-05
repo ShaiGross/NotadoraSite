@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import '../styles/index.css';
-import {fetcher} from '../tools/fetcher'
+import {Fetcher} from '../tools/fetcher'
 
 class ConjugationRuleDetails extends React.Component {
     constructor(props) {
@@ -31,7 +31,7 @@ class ConjugationRuleDetails extends React.Component {
 
     fetchRule(conjugationRule) {
         
-        const conjugationRulePromise = fetcher.fetchGrammObjById('conjugationRules', conjugationRule.id);
+        const conjugationRulePromise = Fetcher.fetchGrammObjById('conjugationRules', conjugationRule.id);
 
         conjugationRulePromise.then(conjugationRule => {
             this.setRule(conjugationRule);
@@ -103,7 +103,7 @@ class ConjugationRuleDetails extends React.Component {
                     <div className='conjugation-rule-details'>
                         <p className='conjugation-rule-title'>{this.state.conjugationRule.name}</p>
                         <div className='conjugation-rule-desc-container'>
-                            <h2 className='conjugation-rule-desc-label'>description:</h2>
+                            <h2 className='conjugation-rule-desc-label'>description</h2>
                             { !this.state.editingField && 
                                 <p className='conjugation-rule-desc'
                                    onClick={e => this.editDescription(e)}>{this.state.conjugationRule.description}</p>
