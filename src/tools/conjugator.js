@@ -1,3 +1,4 @@
+import React                   from 'react';
 import {Fetcher}               from './fetcher.js'
 import {Conjugation}           from '../components/conjugation.js'
 
@@ -6,14 +7,14 @@ const Conjugator = {
         
         const spanishInf = verb.spanishInfinative;
 
-        if (spanishInf == 'ar') {
+        if (spanishInf.endsWith('ar')) {
             return 0;
-        } else if (spanishInf == 'er') {
+        } else if (spanishInf.endsWith('er')) {
             return 1;
-        } else if (spanishInf == 'ir') {
+        } else if (spanishInf.endsWith('ir')) {
             return 2;
         } else {
-            return null;
+            throw Error('Unknown verb type at getVerbType');
         }
     }
     ,conjugateVerb: (grammaticalData, verb) => {
@@ -27,16 +28,11 @@ const Conjugator = {
         return spanishInf.substring(0, spanishInf.length - 2);
     }
     ,render: (props) => {
-        const {conjugationRule, isntruction, conjugationMatch} = props;                        
+        const {conjugationRule, instruction, conjugationMatch} = props;
 
-        if (conjugationRule == null)
-        {
-
-        }
-
-        return <Conjugaiton instruction={instruction} 
-                            conjugaitonMatch={conjugaitonMatch}
-                            conjugaitonRuleType={conjugationRule.conjugaitonRuleType}></Conjugaiton>
+        return (<Conjugation instruction={instruction} 
+                            conjugationMatch={conjugationMatch}
+                            conjugaitonRuleType={conjugationRule.conjugaitonRuleType}></Conjugation>);
     }
 }
 

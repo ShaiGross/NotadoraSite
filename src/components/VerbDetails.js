@@ -26,7 +26,7 @@ setVerb(verb, setState = true) {
     }, []);
 
     this.irregularConjugationRules = conjugationRules.filter(cr => !cr.isRegular);
-    this.isRegular = !this.irregularConjugationRules.length;
+    this.isRegular = !this.irregularConjugationRules;
     
     const participleTenses = Object.values(grammaticalData.tenses).filter(t => t.name.includes('Participle'));
     const presentParticipleTense = participleTenses.find(t => t.name.startsWith('Present'));
@@ -34,19 +34,25 @@ setVerb(verb, setState = true) {
     this.presentParticipleId = presentParticipleTense.id;
     this.pastParticipleId = pastParticipleTense.id;   
     
-    if (!this.isRegular) {
+    if (!verb.conjugationmatches && !this.isRegular) {
         var matchesPromise = Conjugator.getVerbConjugationMatches(verb.id);
 
         matchesPromise.then(conjugationMatches => {
+            
+            conjugationMatches.map(conjMatch => {
+                const conjRuleId = conjMatch.conjugationRuleId;
+                const conjRule = grammaticalData.conjugationRules[conjRuleId];
+                conjMatch.conjugationRule = conjRule;
+            });
+
             verb.conjugationMatches = conjugationMatches;
 
-            if (setState) {
-                this.setState({
-                    verb: verb
-                });
-            } 
+            this.setState({
+                verb: verb
+            }); 
         });
     }
+
     else if (setState) {
         this.setState({
             verb: verb
@@ -64,19 +70,46 @@ componentWillReceiveProps(nextProps) {
 }
 
 render() {   
+
+    const {verb} = this.state;
+    const grammaticalData = this.props.grammaticalData;
     
-    let regularVerbsConjugations = (props) => {
+    const verbConjugations = (props) => {
         
-        const {verb, grammaticalData}  = props;
-        const stem = Conjugator.getVerbStem(verb);
-        const conjugationRuleId = verb.conjugationMatch.conjugationRuleId;
+        const {verb, grammaticalData} = props;
+        
+        if (!verb.conjugationMatches)
+            return;
+        
+        const instructions = Object.values(grammaticalData.instructions);
+        const tenses = Object.values(grammaticalData.tenses);
+        const verbType = Conjugator.getVerbType(verb);
+        
+        return tenses.map(tense => {
 
+            
+            const tenseId = tense.id;
+            const tenseConjMatches = verb.conjugationMatches.filter(cm => cm.conjugationRule.tenseId === tenseId);
+            
+            return tense.personsIds.map(personId => {
 
-    };
+                const conjMatch = verb.conjugationMatches.find(cm => !cm.personId || 
+                                                                        cm.personId === personId);
+                const instruction = instructions.find(i => i.personId===personId && 
+                                                           i.conjugationRuleId === conjMatch.conjugationRuleId && 
+                                                           i.verbType === verbType);
+                if (!instruction) {
+                    console.log("could find instruciton")
+                }
+                else {
+                    return (<Conjugation key={instruction.id}
+                        instruction={instruction}
+                        conjugationMatch={conjMatch}></Conjugation>);
 
-    const conjBtn = () => {
-        return (<Conjugation></Conjugation>);
-    };
+                }
+            });
+        });
+    }
 
     return (
         <div className='verb-details'>
@@ -90,7 +123,7 @@ render() {
             <h2 className='conjugations-label'>conjugations</h2>
             <div className='verb-rules'>                    
                 {this.isRegular && <p>verb is regular</p>}                    
-                {regularVerbsConjugations(this.props)}
+                {!!verb.conjugationMatches && verbConjugations({verb, grammaticalData})}
                 {!this.isRegular &&                         
                     <div className='verb-irregular-rules'>
                     <h3 className='verb-irregular-rules-title'>special conjugation rules</h3>
@@ -105,7 +138,6 @@ render() {
                     </div>
                 }
             </div>
-            {conjBtn()}
         </div>
     );
 }
