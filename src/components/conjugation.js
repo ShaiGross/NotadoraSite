@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import {Conjugator} from '../tools/conjugator'
 import '../styles/conjugation.css';
 
 function Conjugation(props) {
@@ -12,7 +13,8 @@ function Conjugation(props) {
     }
 
     const {conjugationMatch, 
-           instruction} = props;
+           instruction,
+           verb} = props;
 
     const conjRuleType = conjugationMatch.conjugationRule.conjugationRuleType;
     
