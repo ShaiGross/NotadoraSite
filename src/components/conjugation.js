@@ -5,7 +5,6 @@ import '../styles/conjugation.css';
 
 function Conjugation(props) {
 
-    debugger;
     const conjugationRuleTypes = {
         independent: 0
         ,newPattern: 1
@@ -16,12 +15,13 @@ function Conjugation(props) {
            instruction,
            verb} = props;
 
-    const conjRuleType = conjugationMatch.conjugationRule.conjugationRuleType;
-    
-    const buildConjugaiton = (conjRuleType, conjugationMatch, instruction) => {
+    const conjRuleType = conjugationMatch.conjugationRule.conjugationRuleType;    
+    const verbStem = Conjugator.getVerbStem(verb);
+
+    const buildConjugaiton = (conjRuleType, conjugationMatch, instruction, verbStem) => {
         switch (conjRuleType) {
             case conjugationRuleTypes.independent:
-                return conjugationMatch.pattern + instruction.suffix;            
+                return verbStem + instruction.suffix;            
             case conjugationRuleTypes.newPattern:
                 return conjugationMatch.conjugationString + instruction.suffix;         
             case conjugationRuleTypes.special:
@@ -31,7 +31,7 @@ function Conjugation(props) {
         }
     }
 
-    return <div className='conjugation'>{buildConjugaiton(conjRuleType, conjugationMatch, instruction)}</div>;
+    return <div className='conjugation'>{buildConjugaiton(conjRuleType, conjugationMatch, instruction, verbStem)}</div>;
     
 }   
 

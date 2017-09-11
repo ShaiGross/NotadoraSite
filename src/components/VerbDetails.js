@@ -87,14 +87,14 @@ render() {
         
         return tenses.map(tense => {
 
-            
+            debugger;
             const tenseId = tense.id;
             const tenseConjMatches = verb.conjugationMatches.filter(cm => cm.conjugationRule.tenseId === tenseId);
             
             return tense.personsIds.map(personId => {
 
-                const conjMatch = verb.conjugationMatches.find(cm => !cm.personId || 
-                                                                        cm.personId === personId);
+                const conjMatch = tenseConjMatches.find(cm => !cm.personId || 
+                                                              cm.personId === personId);
                 const instruction = instructions.find(i => i.personId===personId && 
                                                            i.conjugationRuleId === conjMatch.conjugationRuleId && 
                                                            i.verbType === verbType);
@@ -103,8 +103,9 @@ render() {
                 }
                 else {
                     return (<Conjugation key={instruction.id}
-                        instruction={instruction}
-                        conjugationMatch={conjMatch}></Conjugation>);
+                                         instruction={instruction}
+                                         conjugationMatch={conjMatch}
+                                         verb={verb}></Conjugation>);
 
                 }
             });
